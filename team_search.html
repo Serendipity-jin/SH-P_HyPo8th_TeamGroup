@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>조 배정 확인</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2em;
+        }
+
+        .search-box {
+            margin-bottom: 30px;
+        }
+
+        label {
+            display: block;
+            color: #666;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .result {
+            margin-top: 30px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            display: none;
+        }
+
+        .result.show {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-item {
+            margin: 10px 0;
+            font-size: 18px;
+            color: #333;
+        }
+
+        .result-label {
+            font-weight: 600;
+            color: #667eea;
+            display: inline-block;
+            width: 120px;
+        }
+
+        .team-name {
+            font-size: 32px;
+            font-weight: 700;
+            color: #764ba2;
+            text-align: center;
+            margin-top: 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+        }
+
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .error.show {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        .info {
+            text-align: center;
+            color: #666;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 조 배정 확인</h1>
+        
+        <div class="search-box">
+            <label for="searchInput">고유번호 또는 이름을 입력하세요</label>
+            <input type="text" id="searchInput" placeholder="예: 1001 또는 홍길동">
+        </div>
+
+        <button onclick="searchTeam()">검색하기</button>
+
+        <div class="result" id="result">
+            <div class="result-item">
+                <span class="result-label">고유번호:</span>
+                <span id="resultId"></span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">이름:</span>
+                <span id="resultName"></span>
+            </div>
+            <div class="team-name" id="resultTeam"></div>
+        </div>
+
+        <div class="error" id="error">
+            검색 결과가 없습니다. 고유번호 또는 이름을 다시 확인해주세요.
+        </div>
+
+        <div class="info">
+            총 350명의 지원자 데이터가 등록되어 있습니다.
+        </div>
+    </div>
+
+    <script>
+        // 예시 데이터 (350명)
+        // 실제로는 이 부분을 여러분의 실제 데이터로 교체하면 됩니다!
+        const applicants = [
+            // A조 (1~50번)
+            { id: "1001", name: "김민수", team: "A-1" },
+            { id: "1002", name: "이영희", team: "A-1" },
+            { id: "1003", name: "박지훈", team: "A-1" },
+            { id: "1004", name: "최서연", team: "A-1" },
+            { id: "1005", name: "정다은", team: "A-1" },
+            { id: "1006", name: "강민준", team: "A-2" },
+            { id: "1007", name: "조수진", team: "A-2" },
+            { id: "1008", name: "윤성호", team: "A-2" },
+            { id: "1009", name: "임하늘", team: "A-2" },
+            { id: "1010", name: "한지우", team: "A-2" },
+            { id: "1011", name: "신동욱", team: "A-3" },
+            { id: "1012", name: "오나래", team: "A-3" },
+            { id: "1013", name: "서준영", team: "A-3" },
+            { id: "1014", name: "권미래", team: "A-3" },
+            { id: "1015", name: "황태양", team: "A-3" },
+            { id: "1016", name: "배수지", team: "A-4" },
+            { id: "1017", name: "송민호", team: "A-4" },
+            { id: "1018", name: "안지현", team: "A-4" },
+            { id: "1019", name: "유재석", team: "A-4" },
+            { id: "1020", name: "남주혁", team: "A-4" },
+            
+            // B조 (51~100번)
+            { id: "1021", name: "김태희", team: "B-1" },
+            { id: "1022", name: "이동욱", team: "B-1" },
+            { id: "1023", name: "박보검", team: "B-1" },
+            { id: "1024", name: "최우식", team: "B-1" },
+            { id: "1025", name: "정해인", team: "B-1" },
+            { id: "1026", name: "강소라", team: "B-2" },
+            { id: "1027", name: "조정석", team: "B-2" },
+            { id: "1028", name: "윤아", team: "B-2" },
+            { id: "1029", name: "임시완", team: "B-2" },
+            { id: "1030", name: "한효주", team: "B-2" },
+            { id: "1031", name: "신민아", team: "B-3" },
+            { id: "1032", name: "오정세", team: "B-3" },
+            { id: "1033", name: "서현진", team: "B-3" },
+            { id: "1034", name: "권상우", team: "B-3" },
+            { id: "1035", name: "황정민", team: "B-3" },
+            { id: "1036", name: "배두나", team: "B-4" },
+            { id: "1037", name: "송강호", team: "B-4" },
+            { id: "1038", name: "안성기", team: "B-4" },
+            { id: "1039", name: "유해진", team: "B-4" },
+            { id: "1040", name: "나문희", team: "B-4" },
+            
+            // C조 (101~150번)
+            { id: "1041", name: "김혜수", team: "C-1" },
+            { id: "1042", name: "이병헌", team: "C-1" },
+            { id: "1043", name: "박해일", team: "C-1" },
+            { id: "1044", name: "최민식", team: "C-1" },
+            { id: "1045", name: "정우성", team: "C-1" },
+            { id: "1046", name: "강동원", team: "C-2" },
+            { id: "1047", name: "조인성", team: "C-2" },
+            { id: "1048", name: "윤계상", team: "C-2" },
+            { id: "1049", name: "임수정", team: "C-2" },
+            { id: "1050", name: "한가인", team: "C-2" },
+            
+            // 나머지 데이터 (51~350번까지 자동 생성)
+            ...generateRemainingData()
+        ];
+
+        // 나머지 300명 데이터 자동 생성 함수
+        function generateRemainingData() {
+            const data = [];
+            const teams = ["D-1", "D-2", "D-3", "D-4", "E-1", "E-2", "E-3", "E-4", 
+                          "F-1", "F-2", "F-3", "F-4", "G-1", "G-2", "G-3", "G-4",
+                          "H-1", "H-2", "H-3", "H-4", "I-1", "I-2", "I-3", "I-4"];
+            const lastNames = ["김", "이", "박", "최", "정", "강", "조", "윤", "장", "임", "한", "신", "오", "서", "권", "황", "안", "송", "전", "홍"];
+            const firstNames = ["민수", "영희", "지훈", "서연", "다은", "민준", "수진", "성호", "하늘", "지우", 
+                               "동욱", "나래", "준영", "미래", "태양", "수지", "민호", "지현", "재석", "주혁",
+                               "태희", "동욱", "보검", "우식", "해인", "소라", "정석", "시완", "효주", "민아"];
+            
+            for (let i = 51; i <= 350; i++) {
+                const randomLastName = lastNames[Math.floor(Math.random() * lastNames.length)];
+                const randomFirstName = firstNames[Math.floor(Math.random() * firstNames.length)];
+                const teamIndex = Math.floor((i - 51) / 12.5); // 약 12-13명씩 조 배정
+                
+                data.push({
+                    id: String(1000 + i),
+                    name: randomLastName + randomFirstName,
+                    team: teams[teamIndex % teams.length]
+                });
+            }
+            
+            return data;
+        }
+
+        // 검색 함수
+        function searchTeam() {
+            const searchValue = document.getElementById('searchInput').value.trim();
+            const resultDiv = document.getElementById('result');
+            const errorDiv = document.getElementById('error');
+            
+            // 이전 결과 숨기기
+            resultDiv.classList.remove('show');
+            errorDiv.classList.remove('show');
+            
+            if (!searchValue) {
+                errorDiv.textContent = "검색어를 입력해주세요.";
+                errorDiv.classList.add('show');
+                return;
+            }
+            
+            // 고유번호 또는 이름으로 검색
+            const result = applicants.find(person => 
+                person.id === searchValue || person.name === searchValue
+            );
+            
+            if (result) {
+                // 결과 표시
+                document.getElementById('resultId').textContent = result.id;
+                document.getElementById('resultName').textContent = result.name;
+                document.getElementById('resultTeam').textContent = result.team;
+                resultDiv.classList.add('show');
+            } else {
+                // 에러 표시
+                errorDiv.textContent = "검색 결과가 없습니다. 고유번호 또는 이름을 다시 확인해주세요.";
+                errorDiv.classList.add('show');
+            }
+        }
+
+        // 엔터키로 검색
+        document.getElementById('searchInput').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                searchTeam();
+            }
+        });
+    </script>
+</body>
+</html>
